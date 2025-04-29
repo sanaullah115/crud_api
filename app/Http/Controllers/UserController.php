@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Http\Controllers;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class UserController extends Controller
+{
+    public function index() {
+        $user = User::all();
+        return response()->json(['data' => $user, 'msg' => 'fatched data ']);
+
+    }
+    public function store(Request $request) {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+        ]);
+
+        return User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+    }
+    
+    public function show($id) {
+        return User::findOrFail($id);
+    }
+    
+
+    public function update(Request $request, $id) {
+        $user = User::findOrFail($id);
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email,'.$id,
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+        return $user;
+    }
+
+    public function destroy($id) {
+        User::findOrFail($id)->delete();
+        return response()->json(['message' => 'User deleted']);
+    }
+}
